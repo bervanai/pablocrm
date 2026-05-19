@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pablo Inmobiliaria — Tu Próxima Propiedad</title>
+  <meta name="description" content="Encuentra o vende tu propiedad con la asesoría personalizada de Pablo. Rellena el formulario y te contactamos hoy mismo.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    /* ── Reset & Variables ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d0d0b;
+      --bg2:       #141412;
+      --gold:      #c9a84c;
+      --gold-dim:  #9a7b36;
+      --cream:     #f0ead6;
+      --cream-dim: #b8af97;
+      --text:      #e8e2d0;
+      --muted:     #6b6558;
+      --border:    #2a2822;
+      --radius:    4px;
+      --ff-serif:  'Cormorant Garamond', Georgia, serif;
+      --ff-sans:   'DM Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--ff-sans);
+      font-weight: 300;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    /* ── Background texture ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(201,168,76,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 90% 90%, rgba(201,168,76,0.04) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Layout ── */
+    .wrapper {
+      position: relative; z-index: 1;
+      width: 100%;
+      max-width: 520px;
+      padding: 0 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ── Header ── */
+    header {
+      width: 100%;
+      padding: 52px 0 0;
+      text-align: center;
+      animation: fadeUp 0.8s ease both;
+    }
+
+    .logo-mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 40px;
+    }
+
+    .logo-mark .line {
+      width: 32px; height: 1px;
+      background: var(--gold-dim);
+    }
+
+    .logo-mark span {
+      font-family: var(--ff-serif);
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    .hero-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      font-family: var(--ff-serif);
+      font-size: clamp(2.4rem, 8vw, 3.6rem);
+      font-weight: 300;
+      line-height: 1.15;
+      color: var(--cream);
+      margin-bottom: 20px;
+    }
+
+    h1 em {
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    .subtitle {
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--cream-dim);
+      line-height: 1.7;
+      max-width: 380px;
+      margin: 0 auto 48px;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+      margin-bottom: 40px;
+      animation: fadeUp 0.8s 0.2s ease both;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border));
+    }
+    .divider::after { background: linear-gradient(90deg, var(--border), transparent); }
+    .divider-text {
+      font-size: 9px; letter-spacing: 0.3em;
+      text-transform: uppercase; color: var(--muted);
+    }
+
+    /* ── Form ── */
+    .form-card {
+      width: 100%;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 40px 36px;
+      animation: fadeUp 0.8s 0.35s ease both;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    input[type="text"],
+    input[type="tel"] {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--ff-sans);
+      font-size: 15px;
+      font-weight: 300;
+      padding: 8px 0 12px;
+      outline: none;
+      transition: border-color 0.25s;
+      -webkit-appearance: none;
+    }
+
+    input[type="text"]::placeholder,
+    input[type="tel"]::placeholder { color: var(--muted); }
+
+    input[type="text"]:focus,
+    input[type="tel"]:focus { border-bottom-color: var(--gold-dim); }
+
+    select {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--ff-sans);
+      font-size: 15px;
+      font-weight: 300;
+      padding: 8px 0 12px;
+      outline: none;
+      transition: border-color 0.25s;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+    select:focus { border-bottom-color: var(--gold-dim); }
+    select option { background: var(--bg2); color: var(--text); }
+
+    .dynamic-fields {
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transition: max-height 0.4s ease, opacity 0.3s ease;
+      pointer-events: none;
+    }
+    .dynamic-fields.visible {
+      max-height: 1100px;
+      opacity: 1;
+      pointer-events: all;
+    }
+    .section-label {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      margin: 28px 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-label::after {
+      content: ''; flex: 1; height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Interest selector ── */
+    .interest-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+
+    .interest-option input[type="radio"] { display: none; }
+
+    .interest-option label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px 8px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      letter-spacing: 0.12em;
+      font-size: 9px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .interest-option label .icon {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .interest-option input[type="radio"]:checked + label {
+      border-color: var(--gold-dim);
+      background: rgba(201,168,76,0.07);
+      color: var(--gold);
+    }
+
+    .financing-group {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .financing-option input[type="radio"] { display: none; }
+
+    .financing-option label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .financing-option input[type="radio"]:checked + label {
+      border-color: var(--gold-dim);
+      background: rgba(201,168,76,0.07);
+      color: var(--gold);
+    }
+
+    /* ── Submit ── */
+    .submit-btn {
+      width: 100%;
+      margin-top: 32px;
+      padding: 18px 24px;
+      background: var(--gold);
+      color: #0d0d0b;
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--ff-sans);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .submit-btn:hover { background: #d4b45e; }
+    .submit-btn:active { transform: scale(0.98); }
+    .submit-btn:disabled { background: var(--gold-dim); cursor: not-allowed; opacity: 0.6; }
+
+    .submit-btn .spinner {
+      display: none;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(13,13,11,0.3);
+      border-top-color: #0d0d0b;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto;
+    }
+
+    .submit-btn.loading .btn-text { display: none; }
+    .submit-btn.loading .spinner { display: block; }
+
+    /* ── Success state ── */
+    .success-screen {
+      display: none;
+      text-align: center;
+      padding: 20px 0;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .success-icon {
+      width: 56px; height: 56px;
+      border: 1px solid var(--gold-dim);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 22px;
+    }
+
+    .success-screen h2 {
+      font-family: var(--ff-serif);
+      font-size: 1.9rem;
+      font-weight: 300;
+      color: var(--cream);
+      margin-bottom: 12px;
+    }
+
+    .success-screen p {
+      font-size: 13px;
+      color: var(--cream-dim);
+      line-height: 1.7;
+    }
+
+    /* ── Error message ── */
+    .error-msg {
+      display: none;
+      color: #e07070;
+      font-size: 12px;
+      text-align: center;
+      margin-top: 16px;
+    }
+
+    /* ── Footer ── */
+    footer {
+      padding: 40px 0 32px;
+      text-align: center;
+      animation: fadeUp 0.8s 0.5s ease both;
+    }
+
+    footer p {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Privacy ── */
+    .privacy-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .privacy-note p {
+      font-size: 10px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 400px) {
+      .form-card { padding: 32px 24px; }
+      .interest-option label { padding: 14px 6px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <header>
+    <div class="logo-mark">
+      <span class="line"></span>
+      <span>Pablo Inmobiliaria</span>
+      <span class="line"></span>
+    </div>
+
+    <span class="hero-tag">Asesoría Inmobiliaria Personalizada</span>
+
+    <h1>Tu propiedad<br><em>ideal</em> te espera.</h1>
+
+    <p class="subtitle">
+      Tanto si quieres comprar como vender, te acompañamos en cada paso.
+      Déjanos tus datos y hablamos hoy mismo.
+    </p>
+  </header>
+
+  <div class="divider">
+    <span class="divider-text">Contacto</span>
+  </div>
+
+  <div class="form-card">
+    <!-- Formulario principal -->
+    <form id="leadForm">
+
+      <div class="form-group">
+        <label>Me interesa</label>
+        <div class="interest-group">
+          <div class="interest-option">
+            <input type="radio" id="buy" name="interest" value="buy" required />
+            <label for="buy">
+              <span class="icon">🔑</span>
+              Comprar
+            </label>
+          </div>
+          <div class="interest-option">
+            <input type="radio" id="sell" name="interest" value="sell" />
+            <label for="sell">
+              <span class="icon">🏠</span>
+              Vender
+            </label>
+          </div>
+          <div class="interest-option">
+            <input type="radio" id="both" name="interest" value="both" />
+            <label for="both">
+              <span class="icon">⇄</span>
+              Ambas
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div id="fields-contact" class="dynamic-fields">
+        <p class="section-label">Tus datos</p>
+        <div class="form-group">
+          <label for="name">Nombre completo</label>
+          <input type="text" id="name" name="name" placeholder="Tu nombre" required autocomplete="name" />
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Teléfono</label>
+          <input type="tel" id="phone" name="phone" placeholder="+34 600 000 000" required autocomplete="tel" />
+        </div>
+      </div>
+
+      <!-- Campos dinámicos: tipo (común) -->
+      <div id="fields-type" class="dynamic-fields">
+        <p class="section-label">Sobre el inmueble</p>
+        <div class="form-group">
+          <label for="property_type">Tipo de inmueble</label>
+          <select id="property_type" name="property_type">
+            <option value="" disabled selected>Selecciona...</option>
+            <option value="piso">Piso</option>
+            <option value="casa">Casa</option>
+            <option value="chalet">Chalet</option>
+            <option value="local">Local / Comercial</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Campos dinámicos: comprador -->
+      <div id="fields-buyer" class="dynamic-fields">
+        <div class="form-group">
+          <label for="zone">Zona o ciudad</label>
+          <input type="text" id="zone" name="zone" placeholder="Ej: Madrid, Salamanca" />
+        </div>
+        <div class="form-group">
+          <label for="budget">Presupuesto máximo</label>
+          <input type="text" id="budget" name="budget" placeholder="Ej: 250.000 €" />
+        </div>
+        <div class="form-group">
+          <label for="rooms">Habitaciones</label>
+          <select id="rooms" name="rooms">
+            <option value="" disabled selected>Selecciona...</option>
+            <option value="1">1 habitación</option>
+            <option value="2">2 habitaciones</option>
+            <option value="3">3 habitaciones</option>
+            <option value="4">4 habitaciones</option>
+            <option value="5+">5 o más</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Financiación</label>
+          <div class="financing-group">
+            <div class="financing-option">
+              <input type="radio" id="financing_cash" name="financing_status" value="cash" />
+              <label for="financing_cash">
+                <span>Pago al contado</span>
+                <strong>Fondos propios</strong>
+              </label>
+            </div>
+            <div class="financing-option">
+              <input type="radio" id="financing_preapproved" name="financing_status" value="mortgage_preapproved" />
+              <label for="financing_preapproved">
+                <span>Hipoteca preconcedida</span>
+                <strong>Banco aprobado</strong>
+              </label>
+            </div>
+            <div class="financing-option">
+              <input type="radio" id="financing_needed" name="financing_status" value="mortgage_needed" />
+              <label for="financing_needed">
+                <span>No tengo financiación todavía</span>
+                <strong>Necesito ayuda</strong>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campos dinámicos: vendedor -->
+      <div id="fields-seller" class="dynamic-fields">
+        <div class="form-group">
+          <label for="seller_zone">Zona o ciudad del inmueble</label>
+          <input type="text" id="seller_zone" name="seller_zone" placeholder="Ej: Madrid, Chamberí" />
+        </div>
+        <div class="form-group">
+          <label for="address">Dirección del inmueble</label>
+          <input type="text" id="address" name="address" placeholder="Calle, número, ciudad" />
+        </div>
+        <div class="form-group">
+          <label for="price_estimate">Precio estimado</label>
+          <input type="text" id="price_estimate" name="price_estimate" placeholder="Ej: 180.000 €" />
+        </div>
+        <div class="form-group">
+          <label for="square_meters">Metros cuadrados</label>
+          <input type="text" id="square_meters" name="square_meters" placeholder="Ej: 90 m²" />
+        </div>
+      </div>
+
+      <button type="submit" class="submit-btn" id="submitBtn">
+        <span class="btn-text">Quiero que me contacten</span>
+        <span class="spinner"></span>
+      </button>
+
+      <div class="error-msg" id="errorMsg">
+        Algo salió mal. Por favor inténtalo de nuevo.
+      </div>
+
+      <div class="privacy-note">
+        <p>🔒 Tus datos están protegidos. Solo los usamos para contactarte sobre esta consulta.</p>
+      </div>
+
+    </form>
+
+    <!-- Pantalla de éxito -->
+    <div class="success-screen" id="successScreen">
+      <div class="success-icon">✓</div>
+      <h2>¡Recibido!</h2>
+      <p>Pablo se pondrá en contacto contigo en las próximas horas.<br>Gracias por tu confianza.</p>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2025 Pablo Inmobiliaria · Todos los derechos reservados</p>
+  </footer>
+
+</div>
+
+<script>
+  // ── CONFIGURACIÓN SUPABASE ──
+  // 🔧 REEMPLAZA ESTOS VALORES con los tuyos de Supabase:
+  //    Settings → API → Project URL y anon/public key
+  const SUPABASE_URL  = 'https://zvzycqhkytbtlfugtsdz.supabase.co';
+  const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp2enljcWhreXRidGxmdWd0c2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyMjY3MzMsImV4cCI6MjA5MzgwMjczM30.X4SSJYCsPlYOevctfKQcIAqbmqW4qGh92cazD5SM8jY';
+  const AGENT_ID      = 'pablo'; // No cambies esto
+
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ── FORM SUBMIT ──
+  // ── Campos dinámicos ──
+  document.querySelectorAll('input[name="interest"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const val = radio.value;
+      const isBuyer = val === 'buy' || val === 'both';
+      document.getElementById('fields-contact').classList.add('visible');
+      document.getElementById('fields-type').classList.add('visible');
+      document.getElementById('fields-buyer').classList.toggle('visible', isBuyer);
+      document.getElementById('fields-seller').classList.toggle('visible', val === 'sell' || val === 'both');
+
+      if (!isBuyer) {
+        document.querySelectorAll('input[name="financing_status"]').forEach(input => {
+          input.checked = false;
+        });
+      }
+    });
+  });
+
+  document.getElementById('leadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const btn     = document.getElementById('submitBtn');
+    const errMsg  = document.getElementById('errorMsg');
+    const form    = e.target;
+
+    const name     = form.name.value.trim();
+    const phone    = form.phone.value.trim();
+    const interest = form.interest.value;
+
+    if (!interest) {
+      errMsg.textContent = 'Por favor selecciona una opción (comprar, vender o ambas).';
+      errMsg.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.classList.add('loading');
+    errMsg.style.display = 'none';
+
+    const isBuyer  = interest === 'buy'  || interest === 'both';
+    const isSeller = interest === 'sell' || interest === 'both';
+    const financingStatus = isBuyer ? (form.financing_status?.value || '') : null;
+
+    if (isBuyer && !financingStatus) {
+      errMsg.textContent = 'Por favor indica si pagas al contado, tienes hipoteca preconcedida o necesitas financiación.';
+      errMsg.style.display = 'block';
+      btn.disabled = false;
+      btn.classList.remove('loading');
+      return;
+    }
+
+    const qualificationStatus = !isBuyer
+      ? 'qualified'
+      : (financingStatus === 'cash' || financingStatus === 'mortgage_preapproved')
+        ? 'qualified'
+        : 'unqualified';
+
+    const payload = {
+      agent_id:       AGENT_ID,
+      name,
+      phone,
+      interest,
+      qualification_status: qualificationStatus,
+      financing_status:     financingStatus,
+      property_type:  form.property_type?.value  || null,
+      zone:           isBuyer
+        ? (form.zone?.value.trim() || null)
+        : (form.seller_zone?.value.trim() || null),
+      budget:         isBuyer  ? (form.budget?.value.trim()         || null) : null,
+      rooms:          isBuyer  ? (form.rooms?.value                 || null) : null,
+      address:        isSeller ? (form.address?.value.trim()        || null) : null,
+      price_estimate: isSeller ? (form.price_estimate?.value.trim() || null) : null,
+      square_meters:  isSeller ? (form.square_meters?.value.trim()  || null) : null,
+    };
+
+    try {
+      const { error } = await db.from('leads').insert(payload);
+
+      if (error) throw error;
+
+      // Mostrar pantalla de éxito
+      form.style.display = 'none';
+      document.getElementById('successScreen').style.display = 'block';
+
+    } catch (err) {
+      console.error(err);
+      errMsg.style.display = 'block';
+      btn.disabled = false;
+      btn.classList.remove('loading');
+    }
+  });
+</script>
+
+</body>
+</html>
