@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pablo Inmobiliaria — Tu Próxima Propiedad</title>
+  <meta name="description" content="Encuentra o vende tu propiedad con la asesoría personalizada de Pablo.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d0d0b; --bg2: #141412; --gold: #c9a84c; --gold-dim: #9a7b36;
+      --cream: #f0ead6; --cream-dim: #b8af97; --text: #e8e2d0; --muted: #6b6558;
+      --border: #2a2822; --radius: 4px;
+      --ff-serif: 'Cormorant Garamond', Georgia, serif;
+      --ff-sans: 'DM Sans', sans-serif;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: var(--ff-sans); font-weight: 300; min-height: 100vh; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; }
+    body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(201,168,76,0.07) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 90% 90%, rgba(201,168,76,0.04) 0%, transparent 50%); pointer-events: none; z-index: 0; }
+    .wrapper { position: relative; z-index: 1; width: 100%; max-width: 520px; padding: 0 24px; display: flex; flex-direction: column; align-items: center; }
+
+    header { width: 100%; padding: 52px 0 0; text-align: center; animation: fadeUp 0.8s ease both; }
+    .logo-mark { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 40px; }
+    .logo-mark .line { width: 32px; height: 1px; background: var(--gold-dim); }
+    .logo-mark span { font-family: var(--ff-serif); font-size: 11px; font-weight: 400; letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold); }
+    .hero-tag { display: inline-block; font-size: 10px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 18px; }
+    h1 { font-family: var(--ff-serif); font-size: clamp(2.4rem, 8vw, 3.6rem); font-weight: 300; line-height: 1.15; color: var(--cream); margin-bottom: 20px; }
+    h1 em { font-style: italic; color: var(--gold); }
+    .subtitle { font-size: 14px; font-weight: 300; color: var(--cream-dim); line-height: 1.7; max-width: 380px; margin: 0 auto 48px; }
+
+    .divider { display: flex; align-items: center; gap: 16px; width: 100%; margin-bottom: 32px; animation: fadeUp 0.8s 0.2s ease both; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--border)); }
+    .divider::after { background: linear-gradient(90deg, var(--border), transparent); }
+    .divider-text { font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); }
+
+    /* PROGRESS */
+    .progress-wrap { width: 100%; margin-bottom: 24px; animation: fadeUp 0.4s ease both; }
+    .progress-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .progress-label { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
+    .progress-label strong { color: var(--gold); }
+    .progress-track { width: 100%; height: 2px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--gold); border-radius: 2px; transition: width 0.4s ease; }
+
+    /* FORM CARD */
+    .form-card { width: 100%; background: var(--bg2); border: 1px solid var(--border); border-radius: 2px; padding: 40px 36px; animation: fadeUp 0.8s 0.35s ease both; }
+
+    /* STEPS */
+    .step { display: none; }
+    .step.active { display: block; animation: fadeUp 0.35s ease both; }
+
+    .step-title { font-family: var(--ff-serif); font-size: 1.5rem; font-weight: 300; color: var(--cream); margin-bottom: 28px; line-height: 1.3; }
+    .step-title em { font-style: italic; color: var(--gold); }
+
+    .form-group { margin-bottom: 24px; }
+    label { display: block; font-size: 9px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+    input[type="text"], input[type="tel"] { width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--border); color: var(--text); font-family: var(--ff-sans); font-size: 15px; font-weight: 300; padding: 8px 0 12px; outline: none; transition: border-color 0.25s; -webkit-appearance: none; }
+    input[type="text"]::placeholder, input[type="tel"]::placeholder { color: var(--muted); }
+    input[type="text"]:focus, input[type="tel"]:focus { border-bottom-color: var(--gold-dim); }
+    select { width: 100%; background: var(--bg2); border: none; border-bottom: 1px solid var(--border); color: var(--text); font-family: var(--ff-sans); font-size: 15px; font-weight: 300; padding: 8px 0 12px; outline: none; transition: border-color 0.25s; -webkit-appearance: none; cursor: pointer; }
+    select:focus { border-bottom-color: var(--gold-dim); }
+    select option { background: var(--bg2); color: var(--text); }
+
+    /* INTEREST BUTTONS */
+    .interest-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+    .interest-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 16px 8px; border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: border-color 0.2s, background 0.2s; letter-spacing: 0.12em; font-size: 9px; color: var(--muted); text-transform: uppercase; user-select: none; -webkit-user-select: none; }
+    .interest-btn .icon { font-size: 20px; line-height: 1; }
+    .interest-btn.selected { border-color: var(--gold-dim); background: rgba(201,168,76,0.07); color: var(--gold); }
+
+    /* OPTION BUTTONS (financing, tiempo_venta, estado_propiedad) */
+    .option-group { display: flex; flex-direction: column; gap: 10px; }
+    .option-btn { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: border-color 0.2s, background 0.2s; user-select: none; -webkit-user-select: none; }
+    .option-btn .opt-label { font-size: 13px; color: var(--muted); }
+    .option-btn .opt-tag { font-size: 11px; font-weight: 500; color: var(--muted); }
+    .option-btn.selected { border-color: var(--gold-dim); background: rgba(201,168,76,0.07); }
+    .option-btn.selected .opt-label, .option-btn.selected .opt-tag { color: var(--gold); }
+
+    /* NAVIGATION */
+    .nav-btns { display: flex; gap: 12px; margin-top: 32px; }
+    .btn-back { flex: 0 0 auto; padding: 16px 20px; background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: var(--radius); font-family: var(--ff-sans); font-size: 11px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; transition: border-color 0.2s, color 0.2s; }
+    .btn-back:hover { border-color: var(--muted); color: var(--text); }
+    .btn-next { flex: 1; padding: 18px 24px; background: var(--gold); color: #0d0d0b; border: none; border-radius: var(--radius); font-family: var(--ff-sans); font-size: 11px; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; transition: background 0.2s, transform 0.15s; }
+    .btn-next:hover { background: #d4b45e; }
+    .btn-next:active { transform: scale(0.98); }
+    .btn-next:disabled { background: var(--gold-dim); cursor: not-allowed; opacity: 0.6; }
+    .btn-next .spinner { display: none; width: 16px; height: 16px; border: 2px solid rgba(13,13,11,0.3); border-top-color: #0d0d0b; border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto; }
+    .btn-next.loading .btn-text { display: none; }
+    .btn-next.loading .spinner { display: block; }
+
+    .error-msg { display: none; color: #e07070; font-size: 12px; text-align: center; margin-top: 16px; }
+
+    /* SUCCESS */
+    .success-screen { display: none; text-align: center; padding: 20px 0; }
+    .success-icon { width: 56px; height: 56px; border: 1px solid var(--gold-dim); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 22px; }
+    .success-screen h2 { font-family: var(--ff-serif); font-size: 1.9rem; font-weight: 300; color: var(--cream); margin-bottom: 12px; }
+    .success-screen p { font-size: 13px; color: var(--cream-dim); line-height: 1.7; }
+    .telegram-btn { display: inline-flex; align-items: center; gap: 10px; margin-top: 28px; padding: 16px 28px; background: #229ED9; color: #fff; border: none; border-radius: var(--radius); font-family: var(--ff-sans); font-size: 13px; font-weight: 500; letter-spacing: 0.08em; cursor: pointer; text-decoration: none; transition: opacity 0.2s; }
+    .telegram-btn:hover { opacity: 0.88; }
+
+    .privacy-note { display: flex; align-items: flex-start; gap: 10px; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+    .privacy-note p { font-size: 10px; color: var(--muted); line-height: 1.6; }
+
+    footer { padding: 40px 0 32px; text-align: center; animation: fadeUp 0.8s 0.5s ease both; }
+    footer p { font-size: 11px; color: var(--muted); letter-spacing: 0.08em; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 400px) { .form-card { padding: 32px 24px; } .interest-btn { padding: 14px 6px; } }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+  <header>
+    <div class="logo-mark"><span class="line"></span><span>Pablo Inmobiliaria</span><span class="line"></span></div>
+    <span class="hero-tag">Asesoría Inmobiliaria Personalizada</span>
+    <h1>Tu propiedad<br><em>ideal</em> te espera.</h1>
+    <p class="subtitle">Tanto si quieres comprar como vender, te acompañamos en cada paso. Déjanos tus datos y hablamos hoy mismo.</p>
+  </header>
+
+  <div class="divider"><span class="divider-text">Contacto</span></div>
+
+  <!-- PROGRESS BAR -->
+  <div class="progress-wrap" id="progressWrap" style="display:none">
+    <div class="progress-header">
+      <span class="progress-label">Paso <strong id="stepCurrent">1</strong> de <strong id="stepTotal">5</strong></span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+
+  <div class="form-card">
+    <form id="leadForm" onsubmit="return false;">
+
+      <!-- STEP 1: Interés -->
+      <div class="step active" id="step-interest">
+        <p class="step-title">¿Qué te <em>interesa</em>?</p>
+        <input type="hidden" id="interest_val" value="" />
+        <div class="interest-group">
+          <div class="interest-btn" id="opt_buy" onclick="selectInterest('buy')">
+            <span class="icon">🔑</span>Comprar
+          </div>
+          <div class="interest-btn" id="opt_sell" onclick="selectInterest('sell')">
+            <span class="icon">🏠</span>Vender
+          </div>
+          <div class="interest-btn" id="opt_both" onclick="selectInterest('both')">
+            <span class="icon">⇄</span>Ambas
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: Datos de contacto -->
+      <div class="step" id="step-contact">
+        <p class="step-title">Tus <em>datos</em> de contacto</p>
+        <div class="form-group">
+          <label for="name">Nombre completo</label>
+          <input type="text" id="name" placeholder="Tu nombre" autocomplete="name" />
+        </div>
+        <div class="form-group">
+          <label for="phone">Teléfono</label>
+          <input type="tel" id="phone" placeholder="+34 600 000 000" autocomplete="tel" />
+        </div>
+      </div>
+
+      <!-- STEP 3: Tipo de inmueble + Zona -->
+      <div class="step" id="step-property">
+        <p class="step-title">El <em>inmueble</em></p>
+        <div class="form-group">
+          <label>Tipo de inmueble</label>
+          <select id="property_type">
+            <option value="">Selecciona...</option>
+            <option value="piso">Piso</option>
+            <option value="casa">Casa</option>
+            <option value="chalet">Chalet</option>
+            <option value="local">Local / Comercial</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="zone">Zona o ciudad</label>
+          <input type="text" id="zone" placeholder="Ej: Madrid, Salamanca" />
+        </div>
+      </div>
+
+      <!-- STEP 4 COMPRADOR: Presupuesto + Habitaciones -->
+      <div class="step" id="step-buyer-prefs">
+        <p class="step-title">Tus <em>preferencias</em></p>
+        <div class="form-group">
+          <label>Presupuesto máximo</label>
+          <select id="budget">
+            <option value="">Selecciona...</option>
+            <option value="Menos de 100.000€">Menos de 100.000 €</option>
+            <option value="100.000€ - 200.000€">100.000 € – 200.000 €</option>
+            <option value="200.000€ - 300.000€">200.000 € – 300.000 €</option>
+            <option value="300.000€ - 500.000€">300.000 € – 500.000 €</option>
+            <option value="Más de 500.000€">Más de 500.000 €</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Habitaciones</label>
+          <select id="rooms">
+            <option value="">Selecciona...</option>
+            <option value="1">1 habitación</option>
+            <option value="2">2 habitaciones</option>
+            <option value="3">3 habitaciones</option>
+            <option value="4">4 habitaciones</option>
+            <option value="5+">5 o más</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- STEP 5 COMPRADOR: Financiación -->
+      <div class="step" id="step-financing">
+        <p class="step-title">¿Cómo vas a <em>financiarlo</em>?</p>
+        <input type="hidden" id="financiacion_val" value="" />
+        <div class="option-group">
+          <div class="option-btn" id="fin_cash" onclick="selectOption('financiacion', 'cash', this)">
+            <span class="opt-label">Pago al contado</span>
+            <span class="opt-tag">Fondos propios</span>
+          </div>
+          <div class="option-btn" id="fin_pre" onclick="selectOption('financiacion', 'mortgage_preapproved', this)">
+            <span class="opt-label">Hipoteca preconcedida</span>
+            <span class="opt-tag">Banco aprobado</span>
+          </div>
+          <div class="option-btn" id="fin_need" onclick="selectOption('financiacion', 'mortgage_needed', this)">
+            <span class="opt-label">Sin financiación todavía</span>
+            <span class="opt-tag">Necesito ayuda</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP VENDEDOR: Distribución + Estado + Tiempo de venta -->
+      <div class="step" id="step-seller-info">
+        <p class="step-title">Tu <em>propiedad</em></p>
+        <div class="form-group">
+          <label for="distribucion">Distribución</label>
+          <input type="text" id="distribucion" placeholder="Ej: 3 hab, 2 baños, salón, cocina" />
+        </div>
+        <div class="form-group">
+          <label>Estado de la propiedad</label>
+          <input type="hidden" id="estado_propiedad_val" value="" />
+          <div class="option-group" style="margin-top:8px;">
+            <div class="option-btn" onclick="selectOption('estado_propiedad', 'a_reformar', this)">
+              <span class="opt-label">A reformar</span>
+              <span class="opt-tag">Necesita obras</span>
+            </div>
+            <div class="option-btn" onclick="selectOption('estado_propiedad', 'usado', this)">
+              <span class="opt-label">Usado</span>
+              <span class="opt-tag">Buen estado</span>
+            </div>
+            <div class="option-btn" onclick="selectOption('estado_propiedad', 'como_nuevo', this)">
+              <span class="opt-label">Como nuevo</span>
+              <span class="opt-tag">Muy bien conservado</span>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>¿En cuánto tiempo quieres vender?</label>
+          <input type="hidden" id="tiempo_venta_val" value="" />
+          <div class="option-group" style="margin-top:8px;">
+            <div class="option-btn" onclick="selectOption('tiempo_venta', '1_mes', this)">
+              <span class="opt-label">1 mes</span>
+              <span class="opt-tag">Urgente</span>
+            </div>
+            <div class="option-btn" onclick="selectOption('tiempo_venta', '3_meses', this)">
+              <span class="opt-label">3 meses</span>
+              <span class="opt-tag">Próximamente</span>
+            </div>
+            <div class="option-btn" onclick="selectOption('tiempo_venta', 'sin_prisa', this)">
+              <span class="opt-label">No tengo prisa</span>
+              <span class="opt-tag">Sin fecha</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NAVIGATION -->
+      <div class="nav-btns" id="navBtns" style="display:none">
+        <button type="button" class="btn-back" id="btnBack" onclick="prevStep()">← Atrás</button>
+        <button type="button" class="btn-next" id="btnNext" onclick="nextStep()">
+          <span class="btn-text">Siguiente →</span>
+          <span class="spinner"></span>
+        </button>
+      </div>
+
+      <div class="error-msg" id="errorMsg"></div>
+
+      <div class="privacy-note" id="privacyNote">
+        <p>🔒 Tus datos están protegidos. Solo los usamos para contactarte sobre esta consulta.</p>
+      </div>
+    </form>
+
+    <!-- SUCCESS -->
+    <div class="success-screen" id="successScreen">
+      <div class="success-icon">✓</div>
+      <h2>¡Recibido!</h2>
+      <p>Pablo se pondrá en contacto contigo en las próximas horas.<br>Gracias por tu confianza.</p>
+      <div id="telegramSection" style="display:none; margin-top:4px;">
+        <p style="margin-top:16px; font-size:13px; color:var(--cream-dim);">Únete a nuestro canal para recibir las mejores oportunidades antes que nadie:</p>
+        <a class="telegram-btn" href="https://t.me/PON_TU_CANAL_AQUI" target="_blank" rel="noopener">
+          ✈️ Unirse al canal de Telegram
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <footer><p>© 2025 Pablo Inmobiliaria · Todos los derechos reservados</p></footer>
+</div>
+
+<script>
+  var SUPABASE_URL = 'https://zvzycqhkytbtlfugtsdz.supabase.co';
+  var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp2enljcWhreXRidGxmdWd0c2R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyMjY3MzMsImV4cCI6MjA5MzgwMjczM30.X4SSJYCsPlYOevctfKQcIAqbmqW4qGh92cazD5SM8jY';
+  var AGENT_ID = 'pablo';
+  var db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ── STATE ──
+  var interest      = '';
+  var currentStep   = 0;   // index in stepOrder
+  var stepOrder     = [];
+
+  // Step IDs por interés
+  function buildStepOrder(val) {
+    var base = ['step-interest', 'step-contact', 'step-property'];
+    if (val === 'buy')  return base.concat(['step-buyer-prefs', 'step-financing']);
+    if (val === 'sell') return base.concat(['step-seller-info']);
+    if (val === 'both') return base.concat(['step-buyer-prefs', 'step-financing', 'step-seller-info']);
+    return base;
+  }
+
+  // ── INTEREST SELECT (paso 1 — auto-avanza) ──
+  function selectInterest(val) {
+    interest = val;
+    document.getElementById('interest_val').value = val;
+    document.querySelectorAll('.interest-btn').forEach(function(b) { b.classList.remove('selected'); });
+    document.getElementById('opt_' + val).classList.add('selected');
+
+    stepOrder = buildStepOrder(val);
+
+    // Mostrar barra progreso y nav
+    document.getElementById('progressWrap').style.display = 'block';
+    document.getElementById('navBtns').style.display = 'flex';
+
+    setTimeout(function() { goTo(1); }, 280);
+  }
+
+  // ── OPTION BUTTONS (financiación, tiempo_venta, estado_propiedad) ──
+  function selectOption(type, val, el) {
+    var group = el.parentNode;
+    group.querySelectorAll('.option-btn').forEach(function(b) { b.classList.remove('selected'); });
+    el.classList.add('selected');
+    document.getElementById(type + '_val').value = val;
+  }
+
+  // ── NAVIGATION ──
+  function goTo(idx) {
+    currentStep = idx;
+
+    document.querySelectorAll('.step').forEach(function(s) { s.classList.remove('active'); });
+    document.getElementById(stepOrder[idx]).classList.add('active');
+
+    var total   = stepOrder.length - 1; // exclude step-interest from count
+    var current = idx;                  // 1-based visible step
+    document.getElementById('stepCurrent').textContent = current;
+    document.getElementById('stepTotal').textContent   = total;
+    document.getElementById('progressFill').style.width = ((current / total) * 100) + '%';
+
+    document.getElementById('btnBack').style.display  = idx > 1 ? 'inline-flex' : 'none';
+    var isLast = idx === stepOrder.length - 1;
+    var btnNext = document.getElementById('btnNext');
+    btnNext.querySelector('.btn-text').textContent = isLast ? 'Enviar' : 'Siguiente →';
+
+    document.getElementById('errorMsg').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function nextStep() {
+    if (!validate()) return;
+    var isLast = currentStep === stepOrder.length - 1;
+    if (isLast) { submitForm(); } else { goTo(currentStep + 1); }
+  }
+
+  function prevStep() {
+    if (currentStep > 1) goTo(currentStep - 1);
+  }
+
+  // ── VALIDATION ──
+  function validate() {
+    var stepId = stepOrder[currentStep];
+    var err    = document.getElementById('errorMsg');
+    err.style.display = 'none';
+
+    function fail(msg) { err.textContent = msg; err.style.display = 'block'; return false; }
+
+    if (stepId === 'step-contact') {
+      if (!document.getElementById('name').value.trim())  return fail('Por favor introduce tu nombre.');
+      if (!document.getElementById('phone').value.trim()) return fail('Por favor introduce tu teléfono.');
+    }
+    if (stepId === 'step-financing') {
+      if (!document.getElementById('financiacion_val').value) return fail('Indica tu situación de financiación.');
+    }
+    if (stepId === 'step-seller-info') {
+      if (!document.getElementById('estado_propiedad_val').value) return fail('Indica el estado de la propiedad.');
+      if (!document.getElementById('tiempo_venta_val').value) return fail('Indica en cuánto tiempo quieres vender.');
+    }
+    return true;
+  }
+
+  // ── SUBMIT ──
+  async function submitForm() {
+    var btn    = document.getElementById('btnNext');
+    var errMsg = document.getElementById('errorMsg');
+    btn.disabled = true;
+    btn.classList.add('loading');
+    errMsg.style.display = 'none';
+
+    var isBuyer  = interest === 'buy'  || interest === 'both';
+    var isSeller = interest === 'sell' || interest === 'both';
+
+    var financing_status = document.getElementById('financiacion_val').value || null;
+    var tiempo_venta     = document.getElementById('tiempo_venta_val').value || null;
+
+    // ── CUALIFICACIÓN ──
+    // No cualificado si: no tiene prisa (sin_prisa) O no tiene financiación (mortgage_needed)
+    // Con que se cumpla UNA de las dos condiciones → no cualificado
+    var cualificado;
+    if (interest === 'buy') {
+      // Solo comprador: no cualificado si no tiene financiación
+      cualificado = financing_status === 'cash' || financing_status === 'mortgage_preapproved';
+    } else if (interest === 'sell') {
+      // Solo vendedor: no cualificado si no tiene prisa
+      cualificado = tiempo_venta === '1_mes' || tiempo_venta === '3_meses';
+    } else {
+      // Ambas: no cualificado si CUALQUIERA de las dos condiciones se cumple
+      // (sin financiación O sin prisa → no cualificado)
+      var finOk   = financing_status === 'cash' || financing_status === 'mortgage_preapproved';
+      var tiempoOk = tiempo_venta === '1_mes' || tiempo_venta === '3_meses';
+      cualificado = finOk && tiempoOk;
+    }
+
+    var payload = {
+      agent_id:           AGENT_ID,
+      name:               document.getElementById('name').value.trim(),
+      phone:              document.getElementById('phone').value.trim(),
+      interest:           interest,
+      status:             'new',
+      qualification_status: cualificado ? 'qualified' : 'unqualified',
+      financing_status:   isBuyer  ? financing_status : null,
+      property_type:      document.getElementById('property_type').value || null,
+      zone:               document.getElementById('zone').value.trim() || null,
+      budget:             isBuyer  ? (document.getElementById('budget').value || null) : null,
+      rooms:              isBuyer  ? (document.getElementById('rooms').value  || null) : null,
+      distribucion:       isSeller ? (document.getElementById('distribucion').value.trim() || null) : null,
+      estado_propiedad:   isSeller ? (document.getElementById('estado_propiedad_val').value || null) : null,
+      tiempo_venta:       isSeller ? tiempo_venta : null,
+    };
+
+    try {
+      var result = await db.from('leads').insert(payload);
+      if (result.error) throw result.error;
+
+      document.getElementById('leadForm').style.display = 'none';
+      document.getElementById('progressWrap').style.display = 'none';
+      document.getElementById('successScreen').style.display = 'block';
+
+      if (isBuyer) document.getElementById('telegramSection').style.display = 'block';
+
+    } catch (err) {
+      console.error(err);
+      errMsg.textContent = 'Error: ' + (err.message || JSON.stringify(err));
+      errMsg.style.display = 'block';
+      btn.disabled = false;
+      btn.classList.remove('loading');
+    }
+  }
+</script>
+</body>
+</html>
